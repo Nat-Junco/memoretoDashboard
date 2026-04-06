@@ -1,0 +1,304 @@
+---
+import '../styles/global.css';
+---
+
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memoreto — Registro de alumno</title>
+  </head>
+  <body>
+    <div class="registro-wrapper">
+
+      <!-- Formulario de registro -->
+      <div class="registro-card" id="card-form">
+        <div class="registro-logo">🚀</div>
+        <h1>Memoreto</h1>
+        <p class="registro-subtitle">Registro de alumno</p>
+
+        <form id="form-registro" class="registro-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nombre">Nombre</label>
+              <input type="text" id="nombre" placeholder="Tu nombre" required />
+            </div>
+            <div class="form-group">
+              <label for="apellido">Apellido</label>
+              <input type="text" id="apellido" placeholder="Tu apellido" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="correo">Correo electrónico</label>
+            <input type="email" id="correo" placeholder="alumno@ejemplo.com" required />
+          </div>
+          <div class="form-group">
+            <label for="pass">Contraseña</label>
+            <input type="password" id="pass" placeholder="••••••••" required />
+          </div>
+          <div class="form-group">
+            <label for="codigo">Código de grupo</label>
+            <input type="text" id="codigo" placeholder="Ej: ABC-1234" required style="text-transform:uppercase" />
+            <span class="input-hint">Pídele este código a tu profesor</span>
+          </div>
+
+          <div id="error-msg" class="error-msg" style="display:none"></div>
+
+          <button type="submit" id="btn-submit" class="submit-btn">Crear cuenta</button>
+        </form>
+
+        <div class="back-link">
+          <a href="/">← Volver al inicio</a>
+        </div>
+      </div>
+
+      <!-- Pantalla de éxito -->
+      <div class="registro-card" id="card-exito" style="display:none">
+        <div class="exito-icon">🎉</div>
+        <h1>¡Registro completado!</h1>
+        <p class="exito-nombre" id="exito-nombre"></p>
+        <div class="exito-box">
+          <p>Ya puedes iniciar sesión en el juego</p>
+          <p class="exito-bold">Memoreto — Aventura Espacial</p>
+          <p>con tu correo y contraseña.</p>
+        </div>
+        <div class="exito-pasos">
+          <div class="paso">
+            <span class="paso-num">1</span>
+            <span>Abre el juego Memoreto en tu dispositivo</span>
+          </div>
+          <div class="paso">
+            <span class="paso-num">2</span>
+            <span>Inicia sesión con tu correo y contraseña</span>
+          </div>
+          <div class="paso">
+            <span class="paso-num">3</span>
+            <span>¡Empieza a jugar y resuelve tus Memoretos!</span>
+          </div>
+        </div>
+        <a href="/" class="btn-volver">Ir al inicio</a>
+      </div>
+
+    </div>
+  </body>
+</html>
+
+<script>
+  document.getElementById('form-registro')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const nombre   = (document.getElementById('nombre') as HTMLInputElement).value;
+    const apellido = (document.getElementById('apellido') as HTMLInputElement).value;
+    const correo   = (document.getElementById('correo') as HTMLInputElement).value;
+    const pass     = (document.getElementById('pass') as HTMLInputElement).value;
+    const codigo   = (document.getElementById('codigo') as HTMLInputElement).value.toUpperCase();
+    const errorMsg = document.getElementById('error-msg')!;
+    const btnSubmit = document.getElementById('btn-submit') as HTMLButtonElement;
+
+    errorMsg.style.display = 'none';
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = 'Registrando...';
+
+    // Mock — cuando conectemos la API reemplazamos esto
+    await new Promise(r => setTimeout(r, 800));
+
+    if (codigo.length < 3) {
+      errorMsg.textContent = 'Código de grupo inválido. Verifica con tu profesor.';
+      errorMsg.style.display = 'block';
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = 'Crear cuenta';
+      return;
+    }
+
+    // Mostrar pantalla de éxito
+    document.getElementById('exito-nombre')!.textContent = `¡Hola, ${nombre}!`;
+    document.getElementById('card-form')!.style.display = 'none';
+    document.getElementById('card-exito')!.style.display = 'block';
+  });
+</script>
+
+<style>
+  :root { color-scheme: light; }
+
+  body {
+    background-color: #1D243D;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    padding: 2rem;
+    box-sizing: border-box;
+  }
+
+  .registro-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .registro-card {
+    background-color: #FFFFFF;
+    border-radius: 16px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+  }
+
+  .registro-logo { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+  h1 { font-size: 1.6rem; color: #1D243D; margin-bottom: 0.3rem; }
+
+  .registro-subtitle {
+    color: #9AA0C8;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+  }
+
+  .registro-form {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #353D60;
+  }
+
+  input {
+    background-color: #EEF0F8;
+    border: 1px solid #E2E6F0;
+    border-radius: 8px;
+    color: #1D243D;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  input:focus { outline: 2px solid #515A82; }
+
+  .input-hint {
+    font-size: 0.78rem;
+    color: #9AA0C8;
+  }
+
+  .error-msg {
+    color: #8C3030;
+    background-color: #fee2e2;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-size: 0.88rem;
+    text-align: center;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1rem;
+    margin-top: 0.3rem;
+    background-color: #515A82;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: opacity 0.2s;
+  }
+
+  .submit-btn:hover { opacity: 0.85; }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .back-link {
+    margin-top: 1.5rem;
+    font-size: 0.88rem;
+  }
+
+  .back-link a { color: #9AA0C8; }
+
+  /* Pantalla de éxito */
+  .exito-icon { font-size: 4rem; margin-bottom: 1rem; }
+
+  .exito-nombre {
+    color: #515A82;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+  }
+
+  .exito-box {
+    background-color: #EEF0F8;
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.8;
+    color: #353D60;
+  }
+
+  .exito-bold {
+    font-weight: 700;
+    color: #1D243D;
+    font-size: 1.05rem;
+  }
+
+  .exito-pasos {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    text-align: left;
+  }
+
+  .paso {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #353D60;
+  }
+
+  .paso-num {
+    width: 28px;
+    height: 28px;
+    background-color: #515A82;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .btn-volver {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #515A82;
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    box-sizing: border-box;
+    transition: opacity 0.2s;
+  }
+
+  .btn-volver:hover { opacity: 0.85; }
+</style>

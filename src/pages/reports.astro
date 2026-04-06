@@ -1,0 +1,154 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout pageTitle="Reportes" active="reports">
+  <div class="page-header">
+    <div>
+      <h1>Reportes y gráficas</h1>
+      <p class="subtitle">Indicadores de desempeño del grupo</p>
+    </div>
+    <div class="filtros">
+      <select id="filtro-grupo">
+        <option value="1">Grupo A — Matemáticas 101</option>
+        <option value="2">Grupo B — Matemáticas 102</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <!-- Puntuación por alumno -->
+    <div class="card">
+      <h2>Puntuación por alumno</h2>
+      <div id="chart-puntos"></div>
+    </div>
+
+    <!-- Nivel alcanzado por alumno -->
+    <div class="card">
+      <h2>Nivel alcanzado por alumno</h2>
+      <div id="chart-niveles"></div>
+    </div>
+
+    <!-- Intentos por alumno -->
+    <div class="card">
+      <h2>Total de intentos por alumno</h2>
+      <div id="chart-intentos"></div>
+    </div>
+
+    <!-- Distribución de dificultad -->
+    <div class="card">
+      <h2>Memoretos resueltos por dificultad</h2>
+      <div id="chart-dificultad"></div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  // Mock data — estructura idéntica a la API real
+  const estudiantes = [
+    { nombre: "Ana García",      puntos: 850, nivel: 5, intentos: 3, facil: 2, intermedio: 1, dificil: 0 },
+    { nombre: "Luis Martínez",   puntos: 720, nivel: 4, intentos: 3, facil: 1, intermedio: 1, dificil: 1 },
+    { nombre: "Sofía López",     puntos: 610, nivel: 3, intentos: 2, facil: 2, intermedio: 0, dificil: 0 },
+    { nombre: "Carlos Hdz.",     puntos: 540, nivel: 3, intentos: 4, facil: 1, intermedio: 2, dificil: 1 },
+    { nombre: "Valeria Ramírez", puntos: 490, nivel: 2, intentos: 2, facil: 2, intermedio: 0, dificil: 0 },
+  ];
+
+  const nombres   = estudiantes.map(e => e.nombre);
+  const colores   = ['#515A82', '#748FBA', '#4F8C72', '#8C7A30', '#9AA0C8'];
+
+  const layout = (yTitle: string) => ({
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor:  'rgba(0,0,0,0)',
+    font: { family: 'Segoe UI, system-ui, sans-serif', color: '#353D60' },
+    margin: { t: 10, r: 10, b: 80, l: 50 },
+    xaxis: { tickfont: { size: 11 }, tickangle: -20 },
+    yaxis: { title: yTitle, gridcolor: '#E2E6F0' },
+    showlegend: false,
+  });
+
+  const config = { responsive: true, displayModeBar: false };
+
+  // 1 — Puntuación por alumno
+  (window as any).Plotly.newPlot('chart-puntos', [{
+    type: 'bar',
+    x: nombres,
+    y: estudiantes.map(e => e.puntos),
+    marker: { color: colores },
+    text: estudiantes.map(e => String(e.puntos)),
+    textposition: 'outside',
+  }], layout('Puntos'), config);
+
+  // 2 — Nivel por alumno
+  (window as any).Plotly.newPlot('chart-niveles', [{
+    type: 'bar',
+    x: nombres,
+    y: estudiantes.map(e => e.nivel),
+    marker: { color: colores },
+    text: estudiantes.map(e => String(e.nivel)),
+    textposition: 'outside',
+  }], { ...layout('Nivel'), yaxis: { ...layout('Nivel').yaxis, dtick: 1, range: [0, 7] } }, config);
+
+  // 3 — Intentos por alumno
+  (window as any).Plotly.newPlot('chart-intentos', [{
+    type: 'bar',
+    x: nombres,
+    y: estudiantes.map(e => e.intentos),
+    marker: { color: '#748FBA' },
+    text: estudiantes.map(e => String(e.intentos)),
+    textposition: 'outside',
+  }], layout('Intentos'), config);
+
+  // 4 — Dificultad (stacked bar)
+  (window as any).Plotly.newPlot('chart-dificultad', [
+    {
+      type: 'bar', name: 'Fácil',
+      x: nombres, y: estudiantes.map(e => e.facil),
+      marker: { color: '#4F8C72' },
+    },
+    {
+      type: 'bar', name: 'Intermedio',
+      x: nombres, y: estudiantes.map(e => e.intermedio),
+      marker: { color: '#8C7A30' },
+    },
+    {
+      type: 'bar', name: 'Difícil',
+      x: nombres, y: estudiantes.map(e => e.dificil),
+      marker: { color: '#8C3030' },
+    },
+  ], {
+    ...layout('Memoretos'),
+    barmode: 'stack',
+    showlegend: true,
+    legend: { orientation: 'h', y: -0.3 },
+  }, config);
+</script>
+
+<style>
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  h1 { font-size: 1.6rem; margin-bottom: 0.3rem; }
+  .subtitle { color: var(--color-text-muted); font-size: 0.95rem; }
+
+  .filtros select { min-width: 260px; }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1rem;
+    color: var(--color-text-body);
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .charts-grid { grid-template-columns: 1fr; }
+  }
+</style>

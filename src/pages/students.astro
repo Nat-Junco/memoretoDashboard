@@ -1,0 +1,261 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// Mock data
+const grupo = { grupo_id: 1, nombre: "Grupo A — Matemáticas 101" };
+
+const estudiantes = [
+  {
+    estudiante_id: 1, nombre: "Ana", apellido: "García",
+    correo: "ana@ejemplo.com", puntos_totales: 850,
+    nivel_actual: 5, tiempo_total: 3200,
+    intentos: [
+      { intento_id: 1, plantilla_id: 3, puntos: 200, nivel: "Dificil", tiempo_s: 540, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-01" },
+      { intento_id: 2, plantilla_id: 7, puntos: 310, nivel: "Intermedio", tiempo_s: 620, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-03" },
+      { intento_id: 3, plantilla_id: 11, puntos: 340, nivel: "Facil", tiempo_s: 480, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-05" },
+    ]
+  },
+  {
+    estudiante_id: 2, nombre: "Luis", apellido: "Martínez",
+    correo: "luis@ejemplo.com", puntos_totales: 720,
+    nivel_actual: 4, tiempo_total: 4100,
+    intentos: [
+      { intento_id: 4, plantilla_id: 1, puntos: 180, nivel: "Dificil", tiempo_s: 700, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-02" },
+      { intento_id: 5, plantilla_id: 5, puntos: 250, nivel: "Intermedio", tiempo_s: 900, exitoso: 0, modo_juego: "normal", ultimo_juego: "2025-04-04" },
+      { intento_id: 6, plantilla_id: 9, puntos: 290, nivel: "Facil", tiempo_s: 810, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-06" },
+    ]
+  },
+  {
+    estudiante_id: 3, nombre: "Sofía", apellido: "López",
+    correo: "sofia@ejemplo.com", puntos_totales: 610,
+    nivel_actual: 3, tiempo_total: 2800,
+    intentos: [
+      { intento_id: 7, plantilla_id: 2, puntos: 300, nivel: "Intermedio", tiempo_s: 600, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-03" },
+      { intento_id: 8, plantilla_id: 6, puntos: 310, nivel: "Facil", tiempo_s: 580, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-05" },
+    ]
+  },
+];
+
+function formatTiempo(segundos: number) {
+  const m = Math.floor(segundos / 60);
+  const s = segundos % 60;
+  return `${m}m ${s}s`;
+}
+---
+
+<BaseLayout pageTitle="Alumnos" active="students">
+  <div class="page-header">
+    <div>
+      <h1>Alumnos — {grupo.nombre}</h1>
+      <p class="subtitle">{estudiantes.length} estudiantes registrados</p>
+    </div>
+    <a href="/assign" class="btn btn-primary">+ Registrar alumno</a>
+  </div>
+
+  <!-- Selector de grupo -->
+    <div class="card filter-bar">
+        <label for="grupo-select">Filtrar por grupo:</label>
+        <select id="grupo-select" onchange="window.location.href='/students?grupo=' + this.value">
+            <option value="1" selected>Grupo A — Matemáticas 101</option>
+            <option value="2">Grupo B — Matemáticas 102</option>
+        </select>
+    </div>
+
+  <div class="students-list">
+    {estudiantes.map(e => (
+      <div class="card student-card">
+        <!-- Info principal -->
+        <div class="student-header">
+          <div class="student-avatar">{e.nombre[0]}{e.apellido[0]}</div>
+          <div class="student-info">
+            <h2>{e.nombre} {e.apellido}</h2>
+            <p class="muted">{e.correo}</p>
+          </div>
+          <div class="student-stats">
+            <div class="stat">
+              <span class="stat-label">Puntos</span>
+              <span class="stat-value points">{e.puntos_totales}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Nivel</span>
+              <span class="stat-value">{e.nivel_actual}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Tiempo total</span>
+              <span class="stat-value">{formatTiempo(e.tiempo_total)}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historial de intentos -->
+        <div class="intentos">
+          <h3>Historial de intentos</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Memoreto</th>
+                <th>Nivel</th>
+                <th>Puntos</th>
+                <th>Tiempo</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {e.intentos.map(i => (
+                <tr>
+                  <td class="muted">{i.ultimo_juego}</td>
+                  <td>#{i.plantilla_id}</td>
+                  <td>{i.nivel}</td>
+                  <td class="points">{i.puntos}</td>
+                  <td>{formatTiempo(i.tiempo_s)}</td>
+                  <td>
+                    <span class={`badge ${i.exitoso ? 'badge-success' : 'badge-danger'}`}>
+                      {i.exitoso ? '✓ Completado' : '✗ Fallido'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    ))}
+  </div>
+</BaseLayout>
+
+<style>
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  h1 { font-size: 1.6rem; margin-bottom: 0.3rem; }
+  .subtitle { color: var(--color-text-muted); font-size: 0.95rem; }
+
+  .students-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  /* Student card */
+  .student-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .student-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background-color: var(--color-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .student-info { flex: 1; }
+  .student-info h2 { font-size: 1.1rem; margin-bottom: 0.2rem; }
+
+  .student-stats {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  .stat-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  /* Intentos */
+  .intentos h3 {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+
+  .table th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 600;
+  }
+
+  .table td {
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .table tr:last-child td { border-bottom: none; }
+
+  .muted { color: var(--color-text-muted); }
+  .points { color: var(--color-success); font-weight: 700; }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .badge-success {
+    background-color: #d1fae5;
+    color: var(--color-success);
+  }
+
+  .badge-danger {
+    background-color: #fee2e2;
+    color: var(--color-danger);
+  }
+
+  .filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+}
+
+.filter-bar label {
+  font-weight: 600;
+  color: var(--color-text-body);
+  white-space: nowrap;
+}
+
+.filter-bar select {
+  max-width: 300px;
+}
+</style>

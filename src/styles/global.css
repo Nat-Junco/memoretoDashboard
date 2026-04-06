@@ -6,6 +6,8 @@
 }
 
 :root {
+
+    color-scheme: light;
   /* Fondos */
   --color-bg: #F4F6FA;
   --color-surface: #FFFFFF;

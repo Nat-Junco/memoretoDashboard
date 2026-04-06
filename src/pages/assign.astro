@@ -1,0 +1,380 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const grupos = [
+  { grupo_id: 1, nombre: "Grupo A — Matemáticas 101", descripcion: "Turno matutino", codigo: "MAT-1011" },
+  { grupo_id: 2, nombre: "Grupo B — Matemáticas 102", descripcion: "Turno vespertino", codigo: "MAT-1022" },
+];
+---
+
+<BaseLayout pageTitle="Asignar" active="assign">
+  <div class="page-header">
+    <div>
+      <h1>Gestión de grupos</h1>
+      <p class="subtitle">Crea grupos y comparte el código con tus alumnos</p>
+    </div>
+  </div>
+
+  <div class="two-col">
+
+    <!-- Columna izquierda: Grupos -->
+    <div>
+      <div class="card">
+        <h2>Mis grupos</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Código</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {grupos.map(g => (
+              <tr>
+                <td>
+                  <p class="grupo-nombre">{g.nombre}</p>
+                  <p class="muted">{g.descripcion}</p>
+                </td>
+                <td>
+                  <div class="codigo-badge">
+                    <span id={`codigo-${g.grupo_id}`}>{g.codigo}</span>
+                    <button class="btn-copy" onclick={`copiarCodigo('${g.codigo}')`} title="Copiar código">📋</button>
+                  </div>
+                </td>
+                <td class="acciones">
+                  <button class="btn btn-ghost btn-sm" onclick={`abrirEditarGrupo(${g.grupo_id}, '${g.nombre}', '${g.descripcion}')`}>✏️</button>
+                  <button class="btn btn-danger btn-sm" onclick={`eliminarGrupo(${g.grupo_id})`}>🗑️</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Formulario nuevo grupo -->
+      <div class="card" style="margin-top: 1.5rem;">
+        <h2 id="form-grupo-titulo">Crear nuevo grupo</h2>
+        <form id="form-grupo" class="form">
+          <input type="hidden" id="grupo-id-edit" value="" />
+          <div class="form-group">
+            <label for="grupo-nombre">Nombre del grupo</label>
+            <input type="text" id="grupo-nombre" placeholder="Ej: Grupo A — Matemáticas 101" required />
+          </div>
+          <div class="form-group">
+            <label for="grupo-desc">Descripción</label>
+            <input type="text" id="grupo-desc" placeholder="Ej: Turno matutino" />
+          </div>
+          <div class="form-actions">
+            <button type="button" id="btn-cancelar-grupo" class="btn btn-ghost" style="display:none" onclick="cancelarEdicion()">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar grupo</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Columna derecha: Código para compartir + info -->
+    <div>
+      <!-- Card de código nuevo (aparece al crear grupo) -->
+      <div class="card codigo-card" id="card-codigo-nuevo" style="display:none">
+        <div class="codigo-header">
+          <span class="codigo-icon">✅</span>
+          <h2>¡Grupo creado!</h2>
+        </div>
+        <p class="codigo-instruccion">Comparte este código con tus alumnos para que puedan registrarse:</p>
+        <div class="codigo-display">
+          <span id="codigo-nuevo-valor"></span>
+          <button class="btn-copy-big" id="btn-copy-nuevo" onclick="copiarCodigoNuevo()">📋 Copiar</button>
+        </div>
+        <p class="codigo-hint">Los alumnos lo ingresan en <strong>memoreto.com/registro</strong></p>
+      </div>
+
+      <!-- Info de cómo funciona -->
+      <div class="card info-card">
+        <h2>¿Cómo registrar alumnos?</h2>
+        <div class="pasos">
+          <div class="paso">
+            <span class="paso-num">1</span>
+            <div>
+              <p class="paso-titulo">Crea un grupo</p>
+              <p class="paso-desc">El sistema genera un código único automáticamente</p>
+            </div>
+          </div>
+          <div class="paso">
+            <span class="paso-num">2</span>
+            <div>
+              <p class="paso-titulo">Comparte el código</p>
+              <p class="paso-desc">Envía el código a tus alumnos por el medio que prefieras</p>
+            </div>
+          </div>
+          <div class="paso">
+            <span class="paso-num">3</span>
+            <div>
+              <p class="paso-titulo">El alumno se registra</p>
+              <p class="paso-desc">Van a <strong>/registro</strong>, llenan sus datos y ponen el código</p>
+            </div>
+          </div>
+          <div class="paso">
+            <span class="paso-num">4</span>
+            <div>
+              <p class="paso-titulo">¡Listo para jugar!</p>
+              <p class="paso-desc">El alumno ya puede iniciar sesión en el juego Memoreto</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" style="display:none"></div>
+</BaseLayout>
+
+<script>
+  function showToast(msg: string, tipo: string = 'success') {
+    const t = document.getElementById('toast')!;
+    t.textContent = msg;
+    t.className = `toast toast-${tipo}`;
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 3000);
+  }
+
+  function copiarCodigo(codigo: string) {
+    navigator.clipboard.writeText(codigo);
+    showToast(`Código ${codigo} copiado ✓`);
+  }
+
+  (window as any).copiarCodigo = copiarCodigo;
+
+  (window as any).copiarCodigoNuevo = () => {
+    const codigo = document.getElementById('codigo-nuevo-valor')!.textContent!;
+    navigator.clipboard.writeText(codigo);
+    const btn = document.getElementById('btn-copy-nuevo')!;
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => { btn.textContent = '📋 Copiar'; }, 2000);
+  };
+
+  // Crear / editar grupo
+  document.getElementById('form-grupo')!.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id     = (document.getElementById('grupo-id-edit') as HTMLInputElement).value;
+    const nombre = (document.getElementById('grupo-nombre') as HTMLInputElement).value;
+
+    if (id) {
+      // Edición
+      showToast(`Grupo "${nombre}" actualizado ✓`);
+      (window as any).cancelarEdicion();
+    } else {
+      // Creación — mock código (en real viene de la API)
+      const letras  = Math.random().toString(36).substring(2, 5).toUpperCase();
+      const numeros = Math.floor(1000 + Math.random() * 9000);
+      const codigo  = `${letras}-${numeros}`;
+
+      document.getElementById('codigo-nuevo-valor')!.textContent = codigo;
+      document.getElementById('card-codigo-nuevo')!.style.display = 'block';
+      document.getElementById('card-codigo-nuevo')!.scrollIntoView({ behavior: 'smooth' });
+      showToast(`Grupo "${nombre}" creado ✓`);
+    }
+
+    (e.target as HTMLFormElement).reset();
+    (window as any).cancelarEdicion();
+  });
+
+  (window as any).abrirEditarGrupo = (id: number, nombre: string, desc: string) => {
+    (document.getElementById('grupo-id-edit') as HTMLInputElement).value = String(id);
+    (document.getElementById('grupo-nombre') as HTMLInputElement).value = nombre;
+    (document.getElementById('grupo-desc') as HTMLInputElement).value = desc;
+    document.getElementById('form-grupo-titulo')!.textContent = 'Editar grupo';
+    document.getElementById('btn-cancelar-grupo')!.style.display = 'inline-block';
+    document.getElementById('card-codigo-nuevo')!.style.display = 'none';
+  };
+
+  (window as any).cancelarEdicion = () => {
+    (document.getElementById('grupo-id-edit') as HTMLInputElement).value = '';
+    (document.getElementById('grupo-nombre') as HTMLInputElement).value = '';
+    (document.getElementById('grupo-desc') as HTMLInputElement).value = '';
+    document.getElementById('form-grupo-titulo')!.textContent = 'Crear nuevo grupo';
+    document.getElementById('btn-cancelar-grupo')!.style.display = 'none';
+  };
+
+  (window as any).eliminarGrupo = (id: number) => {
+    if (confirm('¿Eliminar este grupo? Los alumnos perderán acceso.')) {
+      showToast(`Grupo eliminado`, 'danger');
+    }
+  };
+</script>
+
+<style>
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  h1 { font-size: 1.6rem; margin-bottom: 0.3rem; }
+  .subtitle { color: var(--color-text-muted); font-size: 0.95rem; }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  h2 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--color-text-body); }
+
+  /* Table */
+  .table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .table th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 600;
+  }
+  .table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--color-border); }
+  .table tr:last-child td { border-bottom: none; }
+
+  .grupo-nombre { font-weight: 600; margin-bottom: 0.2rem; }
+  .muted { color: var(--color-text-muted); font-size: 0.85rem; }
+  .acciones { display: flex; gap: 0.4rem; }
+
+  /* Código badge */
+  .codigo-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--color-btn-ghost);
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--color-primary);
+    width: fit-content;
+  }
+
+  .btn-copy {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.9rem;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  .btn-copy:hover { opacity: 1; }
+
+  /* Buttons */
+  .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.85rem; }
+  .btn-danger { background-color: var(--color-danger); color: white; }
+
+  /* Form */
+  .form { display: flex; flex-direction: column; gap: 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+  label { font-size: 0.9rem; font-weight: 600; color: var(--color-text-body); }
+  .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
+
+  /* Código nuevo card */
+  .codigo-card {
+    margin-bottom: 1.5rem;
+    border: 2px solid var(--color-success);
+  }
+
+  .codigo-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .codigo-icon { font-size: 1.5rem; }
+
+  .codigo-instruccion {
+    color: var(--color-text-body);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .codigo-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--color-btn-ghost);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.75rem;
+    font-family: monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    letter-spacing: 2px;
+  }
+
+  .btn-copy-big {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: opacity 0.2s;
+  }
+  .btn-copy-big:hover { opacity: 0.85; }
+
+  .codigo-hint {
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+
+  /* Info pasos */
+  .pasos { display: flex; flex-direction: column; gap: 1.2rem; }
+
+  .paso {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .paso-num {
+    width: 28px;
+    height: 28px;
+    background-color: var(--color-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  .paso-titulo { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.2rem; }
+  .paso-desc { font-size: 0.85rem; color: var(--color-text-muted); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    z-index: 999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .toast-success { background-color: var(--color-success); color: white; }
+  .toast-danger { background-color: var(--color-danger); color: white; }
+
+  @media (max-width: 768px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
