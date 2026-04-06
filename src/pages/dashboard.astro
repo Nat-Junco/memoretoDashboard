@@ -1,0 +1,217 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// Mock data — estructura idéntica a la API real
+const grupos = [
+  { grupo_id: 1, nombre: "Grupo A — Matemáticas 101", descripcion: "Turno matutino" },
+  { grupo_id: 2, nombre: "Grupo B — Matemáticas 102", descripcion: "Turno vespertino" },
+];
+
+const estudiantes = [
+  { estudiante_id: 1, nombre: "Ana", apellido: "García", puntos_totales: 850, nivel_actual: 5, tiempo_total: 3200 },
+  { estudiante_id: 2, nombre: "Luis", apellido: "Martínez", puntos_totales: 720, nivel_actual: 4, tiempo_total: 4100 },
+  { estudiante_id: 3, nombre: "Sofía", apellido: "López", puntos_totales: 610, nivel_actual: 3, tiempo_total: 2800 },
+  { estudiante_id: 4, nombre: "Carlos", apellido: "Hernández", puntos_totales: 540, nivel_actual: 3, tiempo_total: 5000 },
+  { estudiante_id: 5, nombre: "Valeria", apellido: "Ramírez", puntos_totales: 490, nivel_actual: 2, tiempo_total: 3600 },
+];
+
+const totalEstudiantes = estudiantes.length;
+const promedioScore = Math.round(estudiantes.reduce((a, e) => a + e.puntos_totales, 0) / totalEstudiantes);
+const nivelPromedio = (estudiantes.reduce((a, e) => a + e.nivel_actual, 0) / totalEstudiantes).toFixed(1);
+---
+
+<BaseLayout pageTitle="Dashboard" active="dashboard">
+  <div class="page-header">
+    <div>
+      <h1>Bienvenido, Profesor</h1>
+      <p class="subtitle">Resumen general de tus grupos</p>
+    </div>
+    <a href="/assign" class="btn btn-primary">+ Nuevo grupo</a>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="card kpi-card">
+      <span class="kpi-icon">👨‍🎓</span>
+      <div>
+        <p class="kpi-label">Total alumnos</p>
+        <p class="kpi-value">{totalEstudiantes}</p>
+      </div>
+    </div>
+    <div class="card kpi-card">
+      <span class="kpi-icon">⭐</span>
+      <div>
+        <p class="kpi-label">Puntuación promedio</p>
+        <p class="kpi-value">{promedioScore}</p>
+      </div>
+    </div>
+    <div class="card kpi-card">
+      <span class="kpi-icon">🎮</span>
+      <div>
+        <p class="kpi-label">Nivel promedio</p>
+        <p class="kpi-value">{nivelPromedio}</p>
+      </div>
+    </div>
+    <div class="card kpi-card">
+      <span class="kpi-icon">📚</span>
+      <div>
+        <p class="kpi-label">Grupos activos</p>
+        <p class="kpi-value">{grupos.length}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <!-- Tabla de grupos -->
+    <div class="card">
+      <h2>Mis grupos</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {grupos.map(g => (
+            <tr>
+              <td>{g.nombre}</td>
+              <td class="muted">{g.descripcion}</td>
+              <td>
+                <a href={`/students?grupo=${g.grupo_id}`} class="btn btn-ghost btn-sm">Ver alumnos</a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Top 5 alumnos -->
+    <div class="card">
+      <h2>Top alumnos</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Alumno</th>
+            <th>Puntos</th>
+            <th>Nivel</th>
+          </tr>
+        </thead>
+        <tbody>
+          {estudiantes.map((e, i) => (
+            <tr>
+              <td class="rank">#{i + 1}</td>
+              <td>{e.nombre} {e.apellido}</td>
+              <td class="points">{e.puntos_totales}</td>
+              <td>{e.nivel_actual}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .subtitle {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+  }
+
+  /* KPI */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .kpi-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .kpi-icon {
+    font-size: 2rem;
+  }
+
+  .kpi-label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.2rem;
+  }
+
+  .kpi-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+
+  /* Two col */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--color-text-body);
+  }
+
+  /* Table */
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .table th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 600;
+  }
+
+  .table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .muted { color: var(--color-text-muted); }
+  .rank { color: var(--color-text-muted); font-weight: 600; }
+  .points { color: var(--color-success); font-weight: 700; }
+
+  .btn-sm {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 768px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+
+  
+</style>

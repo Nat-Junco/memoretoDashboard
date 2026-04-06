@@ -1,0 +1,47 @@
+---
+const { active = '' } = Astro.props;
+---
+
+<nav class="nav">
+  <a href="/dashboard" class={`nav-link ${active === 'dashboard' ? 'active' : ''}`}>
+    📊 Dashboard
+  </a>
+  <a href="/students" class={`nav-link ${active === 'students' ? 'active' : ''}`}>
+    👨‍🎓 Alumnos
+  </a>
+  <a href="/assign" class={`nav-link ${active === 'assign' ? 'active' : ''}`}>
+    📋 Asignar
+  </a>
+  <a href="/reports" class={`nav-link ${active === 'reports' ? 'active' : ''}`}>
+    📈 Reportes
+  </a>
+</nav>
+
+<style>
+  .nav {
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 0 2rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .nav-link {
+    padding: 1rem 1.2rem;
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .nav-link:hover {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .nav-link.active {
+    color: var(--color-primary);
+    border-bottom: 3px solid var(--color-primary);
+  }
+</style>

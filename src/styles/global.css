@@ -1,0 +1,120 @@
+/* ===== RESET & BASE ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Fondos */
+  --color-bg: #F4F6FA;
+  --color-surface: #FFFFFF;
+  --color-sidebar: #1D243D;
+
+  /* Texto */
+  --color-text: #1D243D;
+  --color-text-body: #353D60;
+  --color-text-muted: #9AA0C8;
+
+  /* Botones y acciones */
+  --color-primary: #515A82;
+  --color-accent: #748FBA;
+  --color-border: #E2E6F0;
+  --color-btn-secondary: #353D60;
+  --color-btn-ghost: #EEF0F8;
+  --color-btn-confirm: #4F8C72;
+
+  /* Estados */
+  --color-success: #4F8C72;
+  --color-warning: #8C7A30;
+  --color-danger: #8C3030;
+
+  --font-main: 'Segoe UI', system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  min-height: 100vh;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+h1, h2, h3, h4 {
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+/* ===== LAYOUT ===== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ===== CARDS ===== */
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.4rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.btn-accent {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.btn-confirm {
+  background-color: var(--color-btn-confirm);
+  color: white;
+}
+
+.btn-ghost {
+  background-color: var(--color-btn-ghost);
+  color: var(--color-text-body);
+}
+
+/* ===== FORMS ===== */
+input, select {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+input:focus, select:focus {
+  outline: 2px solid var(--color-primary);
+}

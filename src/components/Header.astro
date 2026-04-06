@@ -1,0 +1,60 @@
+---
+const { pageTitle = 'Aventura Espacial Dashboard' } = Astro.props;
+---
+
+<header class="header">
+  <div class="header-left">
+    <span class="header-logo">🚀 Memoreto</span>
+    <span class="header-divider">|</span>
+    <span class="header-page">{pageTitle}</span>
+    
+  </div>
+  <div class="header-right">
+    <span class="header-role">Docente</span>
+    <a href="/" class="btn btn-ghost">Cerrar sesión</a>
+  </div>
+</header>
+
+<style>
+  .header {
+    background-color: var(--color-sidebar);
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .header-logo {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  .header-divider {
+    color: var(--color-text-muted);
+  }
+
+  .header-page {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .header-role {
+    font-size: 0.85rem;
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+</style>
