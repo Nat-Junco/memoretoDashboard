@@ -44,7 +44,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
       <div class="card">
         <h2>Progreso de puntaje en el tiempo</h2>
-        <p class="chart-desc">Evolución del puntaje acumulado de cada alumno a lo largo del tiempo. Cada línea representa un estudiante — pendientes más pronunciadas indican aprendizaje más rápido.</p>
+        <p class="chart-desc">Evolución del puntaje acumulado de cada alumno a lo largo del tiempo. Cada línea representa un estudiante, entre mayor es la pendiente representa una velocidad mayor en el aprendizaje del alumno.</p>
         <div id="chart-progreso"></div>
       </div>
     </div>
@@ -248,7 +248,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     }
 
     const plantillas = Object.keys(porPlantilla).map(Number).sort((a, b) => a - b);
-    const conteos    = plantillas.map(p => porPlantilla[p].size);
+    const conteos = plantillas.map(p => porPlantilla[p]?.size ?? 0);
 
     // Color por dificultad del primer intento de esa plantilla
     const difPorPlantilla: Record<number, string> = {};
