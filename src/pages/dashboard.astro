@@ -1,34 +1,14 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-
-const grupos = [
-  { grupo_id: 1, nombre: "Grupo A — Matemáticas 101", descripcion: "Turno matutino" },
-  { grupo_id: 2, nombre: "Grupo B — Matemáticas 102", descripcion: "Turno vespertino" },
-];
-
-const estudiantes = [
-  { estudiante_id: 1, nombre: "Ana", apellido: "García", puntos_totales: 850, nivel_actual: 5, tiempo_total: 3200 },
-  { estudiante_id: 2, nombre: "Luis", apellido: "Martínez", puntos_totales: 720, nivel_actual: 4, tiempo_total: 4100 },
-  { estudiante_id: 3, nombre: "Sofía", apellido: "López", puntos_totales: 610, nivel_actual: 3, tiempo_total: 2800 },
-  { estudiante_id: 4, nombre: "Carlos", apellido: "Hernández", puntos_totales: 540, nivel_actual: 3, tiempo_total: 5000 },
-  { estudiante_id: 5, nombre: "Valeria", apellido: "Ramírez", puntos_totales: 490, nivel_actual: 2, tiempo_total: 3600 },
-];
-
-const totalEstudiantes = estudiantes.length;
-const promedioScore = Math.round(estudiantes.reduce((a, e) => a + e.puntos_totales, 0) / totalEstudiantes);
-const nivelPromedio = (estudiantes.reduce((a, e) => a + e.nivel_actual, 0) / totalEstudiantes).toFixed(1);
-
-// Mock — en real viene del localStorage después del login
-const rol = 'admin';
 ---
 
 <BaseLayout pageTitle="Dashboard" active="dashboard">
   <div class="page-header">
     <div>
-      <h1>Bienvenido, Profesor</h1>
+      <h1 id="saludo">Bienvenido</h1>
       <p class="subtitle">Resumen general de tus grupos</p>
     </div>
-    <a href="/assign" class="btn btn-primary">+ Nuevo grupo</a>
+    <a href="/assign" class="btn btn-primary" id="btn-nuevo-grupo" style="display:none">+ Nuevo grupo</a>
   </div>
 
   <!-- KPI Cards -->
@@ -37,28 +17,28 @@ const rol = 'admin';
       <span class="kpi-icon">👨‍🎓</span>
       <div>
         <p class="kpi-label">Total alumnos</p>
-        <p class="kpi-value">{totalEstudiantes}</p>
+        <p class="kpi-value" id="kpi-alumnos">—</p>
       </div>
     </div>
     <div class="card kpi-card">
       <span class="kpi-icon">⭐</span>
       <div>
         <p class="kpi-label">Puntuación promedio</p>
-        <p class="kpi-value">{promedioScore}</p>
+        <p class="kpi-value" id="kpi-puntos">—</p>
       </div>
     </div>
     <div class="card kpi-card">
       <span class="kpi-icon">🎮</span>
       <div>
         <p class="kpi-label">Nivel promedio</p>
-        <p class="kpi-value">{nivelPromedio}</p>
+        <p class="kpi-value" id="kpi-nivel">—</p>
       </div>
     </div>
     <div class="card kpi-card">
       <span class="kpi-icon">📚</span>
       <div>
         <p class="kpi-label">Grupos activos</p>
-        <p class="kpi-value">{grupos.length}</p>
+        <p class="kpi-value" id="kpi-grupos">—</p>
       </div>
     </div>
   </div>
@@ -67,98 +47,80 @@ const rol = 'admin';
     <!-- Tabla de grupos -->
     <div class="card">
       <h2>Mis grupos</h2>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {grupos.map(g => (
-            <tr>
-              <td>{g.nombre}</td>
-              <td class="muted">{g.descripcion}</td>
-              <td>
-                <a href={`/students?grupo=${g.grupo_id}`} class="btn btn-ghost btn-sm">Ver alumnos</a>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div id="tabla-grupos-wrap">
+        <p class="muted">Cargando grupos...</p>
+      </div>
     </div>
 
     <!-- Top alumnos -->
     <div class="card">
       <h2>Top alumnos</h2>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Alumno</th>
-            <th>Puntos</th>
-            <th>Nivel</th>
-          </tr>
-        </thead>
-        <tbody>
-          {estudiantes.map((e, i) => (
-            <tr>
-              <td class="rank">#{i + 1}</td>
-              <td>{e.nombre} {e.apellido}</td>
-              <td class="points">{e.puntos_totales}</td>
-              <td>{e.nivel_actual}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div id="tabla-top-wrap">
+        <p class="muted">Cargando alumnos...</p>
+      </div>
     </div>
   </div>
 
   <!-- Sección solo visible para admin -->
-  {rol === 'admin' && (
-    <div class="admin-section">
-      <div class="admin-header">
-        <span class="admin-badge">🔐 Admin</span>
-        <h2>Registrar nuevo docente</h2>
-        <p class="subtitle">Solo los administradores pueden crear cuentas de docentes</p>
-      </div>
-      <div class="card">
-        <form id="form-docente" class="form-docente">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="doc-nombre">Nombre</label>
-              <input type="text" id="doc-nombre" placeholder="Nombre" required />
-            </div>
-            <div class="form-group">
-              <label for="doc-apellido">Apellido</label>
-              <input type="text" id="doc-apellido" placeholder="Apellido" required />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="doc-correo">Correo electrónico</label>
-              <input type="email" id="doc-correo" placeholder="docente@ejemplo.com" required />
-            </div>
-            <div class="form-group">
-              <label for="doc-pass">Contraseña temporal</label>
-              <input type="password" id="doc-pass" placeholder="••••••••" required />
-            </div>
-          </div>
-          <div id="doc-error" class="error-msg" style="display:none"></div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Registrar docente</button>
-          </div>
-        </form>
-      </div>
+  <div id="admin-section" style="display:none">
+    <div class="admin-header">
+      <span class="admin-badge">🔐 Admin</span>
+      <h2>Registrar nuevo docente</h2>
+      <p class="subtitle">Solo los administradores pueden crear cuentas de docentes</p>
     </div>
-  )}
+    <div class="card">
+      <form id="form-docente" class="form-docente">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="doc-nombre">Nombre</label>
+            <input type="text" id="doc-nombre" placeholder="Nombre" required />
+          </div>
+          <div class="form-group">
+            <label for="doc-apellido">Apellido</label>
+            <input type="text" id="doc-apellido" placeholder="Apellido" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="doc-correo">Correo electrónico</label>
+            <input type="email" id="doc-correo" placeholder="docente@ejemplo.com" required />
+          </div>
+          <div class="form-group">
+            <label for="doc-pass">Contraseña temporal</label>
+            <input type="password" id="doc-pass" placeholder="••••••••" required />
+          </div>
+        </div>
+        <div id="doc-error" class="error-msg" style="display:none"></div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Registrar docente</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- Toast -->
   <div id="toast" class="toast" style="display:none"></div>
 </BaseLayout>
 
 <script>
+  const API    = 'http://localhost:5000';
+  const token  = localStorage.getItem('token');
+  const nombre = localStorage.getItem('nombre');
+  const rol    = localStorage.getItem('rol');
+
+  if (!token) window.location.href = '/';
+
+  // Saludo
+  document.getElementById('saludo')!.textContent = `Bienvenido, ${nombre}`;
+
+  if (rol !== 'admin') {
+  document.getElementById('btn-nuevo-grupo')!.style.display = 'inline-block';
+  }
+  // Mostrar sección admin solo si aplica
+  if (rol === 'admin') {
+    document.getElementById('admin-section')!.style.display = 'block';
+  }
+
   function showToast(msg: string, tipo: string = 'success') {
     const t = document.getElementById('toast')!;
     t.textContent = msg;
@@ -167,18 +129,105 @@ const rol = 'admin';
     setTimeout(() => { t.style.display = 'none'; }, 3000);
   }
 
+  // Cargar grupos del docente
+  const resGrupos = await fetch(`${API}/grupos`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const grupos = await resGrupos.json();
+
+  // Por cada grupo cargar sus estudiantes
+  const promesas    = grupos.map((g: any) =>
+    fetch(`${API}/grupos/${g.grupo_id}/estudiantes`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.json())
+  );
+  const porGrupo    = await Promise.all(promesas);
+  const estudiantes = porGrupo.flat();
+
+  // KPIs
+  document.getElementById('kpi-grupos')!.textContent  = String(grupos.length);
+  document.getElementById('kpi-alumnos')!.textContent = String(estudiantes.length);
+
+  const promPuntos = estudiantes.length
+    ? Math.round(estudiantes.reduce((a: number, e: any) => a + (e.puntos_totales ?? 0), 0) / estudiantes.length)
+    : 0;
+  const promNivel = estudiantes.length
+    ? (estudiantes.reduce((a: number, e: any) => a + (e.nivel_actual ?? 0), 0) / estudiantes.length).toFixed(1)
+    : '0';
+  document.getElementById('kpi-puntos')!.textContent = String(promPuntos);
+  document.getElementById('kpi-nivel')!.textContent  = promNivel;
+
+  // Tabla de grupos
+  const tbodyGrupos = grupos.map((g: any) => `
+    <tr>
+      <td>${g.nombre}</td>
+      <td class="muted">${g.descripcion ?? ''}</td>
+      <td>
+        <a href="/students?grupo=${g.grupo_id}" class="btn btn-ghost btn-sm">Ver alumnos</a>
+      </td>
+    </tr>
+  `).join('');
+
+  document.getElementById('tabla-grupos-wrap')!.innerHTML = grupos.length
+    ? `<table class="table">
+        <thead><tr><th>Nombre</th><th>Descripción</th><th>Acciones</th></tr></thead>
+        <tbody>${tbodyGrupos}</tbody>
+       </table>`
+    : '<p class="muted">No tienes grupos aún. <a href="/assign">Crea tu primer grupo</a></p>';
+
+  // Top alumnos ordenados por puntos
+  const top = [...estudiantes].sort((a: any, b: any) => (b.puntos_totales ?? 0) - (a.puntos_totales ?? 0));
+  const tbodyTop = top.map((e: any, i: number) => `
+    <tr>
+      <td class="rank">#${i + 1}</td>
+      <td>${e.nombre} ${e.apellido}</td>
+      <td class="points">${e.puntos_totales ?? 0}</td>
+      <td>${e.nivel_actual ?? 0}</td>
+    </tr>
+  `).join('');
+
+  document.getElementById('tabla-top-wrap')!.innerHTML = top.length
+    ? `<table class="table">
+        <thead><tr><th>#</th><th>Alumno</th><th>Puntos</th><th>Nivel</th></tr></thead>
+        <tbody>${tbodyTop}</tbody>
+       </table>`
+    : '<p class="muted">No hay alumnos registrados aún.</p>';
+
+  // Registro de docentes (solo admin)
   const formDocente = document.getElementById('form-docente');
   if (formDocente) {
     formDocente.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const nombre  = (document.getElementById('doc-nombre') as HTMLInputElement).value;
-      const errorEl = document.getElementById('doc-error')!;
+      const docNombre   = (document.getElementById('doc-nombre') as HTMLInputElement).value;
+      const docApellido = (document.getElementById('doc-apellido') as HTMLInputElement).value;
+      const docCorreo   = (document.getElementById('doc-correo') as HTMLInputElement).value;
+      const docPass     = (document.getElementById('doc-pass') as HTMLInputElement).value;
+      const errorEl     = document.getElementById('doc-error')!;
       errorEl.style.display = 'none';
 
-      // Mock — cuando conectemos la API reemplazamos esto
-      await new Promise(r => setTimeout(r, 600));
-      showToast(`Docente "${nombre}" registrado correctamente ✓`);
-      (e.target as HTMLFormElement).reset();
+      const res  = await fetch(`${API}/auth/registro`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          nombre:   docNombre,
+          apellido: docApellido,
+          correo:   docCorreo,
+          pass:     docPass,
+          rol:      'docente'
+        })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.exito) {
+        showToast(`Docente "${docNombre}" registrado correctamente ✓`);
+        (e.target as HTMLFormElement).reset();
+      } else {
+        errorEl.textContent = data.mensaje ?? 'Error al registrar docente';
+        errorEl.style.display = 'block';
+      }
     });
   }
 </script>

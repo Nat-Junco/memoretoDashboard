@@ -84,6 +84,7 @@ import '../styles/global.css';
 </html>
 
 <script>
+   const API = 'http://localhost:5000';
   document.getElementById('form-registro')!.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -99,21 +100,40 @@ import '../styles/global.css';
     btnSubmit.disabled = true;
     btnSubmit.textContent = 'Registrando...';
 
-    // Mock — cuando conectemos la API reemplazamos esto
-    await new Promise(r => setTimeout(r, 800));
-
-    if (codigo.length < 3) {
-      errorMsg.textContent = 'Código de grupo inválido. Verifica con tu profesor.';
+      try {
+      const res = await fetch(`${API}/auth/registro`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre,
+          apellido,
+          correo,
+          pass,
+          rol: 'estudiante',
+          codigo_grupo: codigo,
+        }),
+      });
+ 
+      const data = await res.json();
+ 
+      if (res.ok && data.exito) {
+        // Mostrar pantalla de éxito
+        document.getElementById('exito-nombre')!.textContent = `¡Hola, ${nombre}!`;
+        document.getElementById('card-form')!.style.display = 'none';
+        document.getElementById('card-exito')!.style.display = 'block';
+      } else {
+        // El backend manda mensajes claros: código inválido, correo ya registrado, etc.
+        errorMsg.textContent = data.mensaje ?? 'Ocurrió un error. Intenta de nuevo.';
+        errorMsg.style.display = 'block';
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Crear cuenta';
+      }
+    } catch (err) {
+      errorMsg.textContent = 'No se pudo conectar con el servidor. Intenta de nuevo.';
       errorMsg.style.display = 'block';
       btnSubmit.disabled = false;
       btnSubmit.textContent = 'Crear cuenta';
-      return;
     }
-
-    // Mostrar pantalla de éxito
-    document.getElementById('exito-nombre')!.textContent = `¡Hola, ${nombre}!`;
-    document.getElementById('card-form')!.style.display = 'none';
-    document.getElementById('card-exito')!.style.display = 'block';
   });
 </script>
 

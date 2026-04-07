@@ -25,7 +25,7 @@ import '../styles/global.css';
             <input type="password" id="password" placeholder="••••••••" required />
           </div>
           <div id="error-msg" class="error-msg" style="display:none"></div>
-          <button type="submit" class="login-btn">Entrar</button>
+          <button type="submit" id="btn-submit" class="login-btn">Entrar</button>
         </form>
 
         <div class="divider">¿Eres alumno?</div>
@@ -36,21 +36,47 @@ import '../styles/global.css';
 </html>
 
 <script>
+
+  const API = 'http://localhost:5000';
+
   document.getElementById('form-login')!.addEventListener('submit', async (e) => {
     e.preventDefault();
     const correo   = (document.getElementById('email') as HTMLInputElement).value;
     const password = (document.getElementById('password') as HTMLInputElement).value;
     const errorMsg = document.getElementById('error-msg')!;
+    const btnSubmit = document.getElementById('btn-submit') as HTMLButtonElement;
 
-    // Por ahora mock — cuando conectemos la API reemplazamos esto
-    if (correo === 'profesor@ejemplo.com' && password === '1234') {
-      localStorage.setItem('token', 'mock-token');
-      localStorage.setItem('nombre', 'Profesor Demo');
-      localStorage.setItem('rol', 'docente');
-      window.location.href = '/dashboard';
-    } else {
-      errorMsg.textContent = 'Correo o contraseña incorrectos';
+     errorMsg.style.display = 'none';
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = 'Entrando...';
+ 
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario: correo, pass: password }),
+      });
+ 
+      const data = await res.json();
+ 
+      if (res.ok && data.valido) {
+        localStorage.setItem('token',      data.token);
+        localStorage.setItem('usuario_id', String(data.usuario_id));
+        localStorage.setItem('nombre',     data.nombre);
+        localStorage.setItem('rol',        data.rol);
+        window.location.href = '/dashboard';
+      } else {
+        // El backend manda 403 si no es docente/admin, 401 si credenciales incorrectas
+        errorMsg.textContent = data.mensaje ?? 'Correo o contraseña incorrectos';
+        errorMsg.style.display = 'block';
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Entrar';
+      }
+    } catch (err) {
+      errorMsg.textContent = 'No se pudo conectar con el servidor. Intenta de nuevo.';
       errorMsg.style.display = 'block';
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = 'Entrar';
     }
   });
 </script>

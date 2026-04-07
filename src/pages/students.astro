@@ -1,139 +1,198 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-
-// Mock data
-const grupo = { grupo_id: 1, nombre: "Grupo A — Matemáticas 101" };
-
-const estudiantes = [
-  {
-    estudiante_id: 1, nombre: "Ana", apellido: "García",
-    correo: "ana@ejemplo.com", puntos_totales: 850,
-    nivel_actual: 5, tiempo_total: 3200,
-    intentos: [
-      { intento_id: 1, plantilla_id: 3, puntos: 200, nivel: "Dificil", tiempo_s: 540, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-01" },
-      { intento_id: 2, plantilla_id: 7, puntos: 310, nivel: "Intermedio", tiempo_s: 620, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-03" },
-      { intento_id: 3, plantilla_id: 11, puntos: 340, nivel: "Facil", tiempo_s: 480, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-05" },
-    ]
-  },
-  {
-    estudiante_id: 2, nombre: "Luis", apellido: "Martínez",
-    correo: "luis@ejemplo.com", puntos_totales: 720,
-    nivel_actual: 4, tiempo_total: 4100,
-    intentos: [
-      { intento_id: 4, plantilla_id: 1, puntos: 180, nivel: "Dificil", tiempo_s: 700, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-02" },
-      { intento_id: 5, plantilla_id: 5, puntos: 250, nivel: "Intermedio", tiempo_s: 900, exitoso: 0, modo_juego: "normal", ultimo_juego: "2025-04-04" },
-      { intento_id: 6, plantilla_id: 9, puntos: 290, nivel: "Facil", tiempo_s: 810, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-06" },
-    ]
-  },
-  {
-    estudiante_id: 3, nombre: "Sofía", apellido: "López",
-    correo: "sofia@ejemplo.com", puntos_totales: 610,
-    nivel_actual: 3, tiempo_total: 2800,
-    intentos: [
-      { intento_id: 7, plantilla_id: 2, puntos: 300, nivel: "Intermedio", tiempo_s: 600, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-03" },
-      { intento_id: 8, plantilla_id: 6, puntos: 310, nivel: "Facil", tiempo_s: 580, exitoso: 1, modo_juego: "normal", ultimo_juego: "2025-04-05" },
-    ]
-  },
-];
-
-function formatTiempo(segundos: number) {
-  const m = Math.floor(segundos / 60);
-  const s = segundos % 60;
-  return `${m}m ${s}s`;
-}
 ---
 
 <BaseLayout pageTitle="Alumnos" active="students">
   <div class="page-header">
     <div>
-      <h1>Alumnos — {grupo.nombre}</h1>
-      <p class="subtitle">{estudiantes.length} estudiantes registrados</p>
+      <h1 id="titulo-grupo">Alumnos</h1>
+      <p class="subtitle" id="subtitulo">Cargando...</p>
     </div>
-    <a href="/assign" class="btn btn-primary">+ Registrar alumno</a>
+    <a href="/assign" class="btn btn-primary">+ Nuevo grupo</a>
   </div>
 
   <!-- Selector de grupo -->
-    <div class="card filter-bar">
-        <label for="grupo-select">Filtrar por grupo:</label>
-        <select id="grupo-select" onchange="window.location.href='/students?grupo=' + this.value">
-            <option value="1" selected>Grupo A — Matemáticas 101</option>
-            <option value="2">Grupo B — Matemáticas 102</option>
-        </select>
-    </div>
+  <div class="card filter-bar">
+    <label for="grupo-select">Filtrar por grupo:</label>
+    <select id="grupo-select">
+      <option value="">Cargando grupos...</option>
+    </select>
+  </div>
 
-  <div class="students-list">
-    {estudiantes.map(e => (
-      <div class="card student-card">
-        <!-- Info principal -->
-        <div class="student-header">
-          <div class="student-avatar">{e.nombre[0]}{e.apellido[0]}</div>
-          <div class="student-info">
-            <h2>{e.nombre} {e.apellido}</h2>
-            <p class="muted">{e.correo}</p>
-          </div>
-          <div class="student-stats">
-            <div class="stat">
-              <span class="stat-label">Puntos</span>
-              <span class="stat-value points">{e.puntos_totales}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Nivel</span>
-              <span class="stat-value">{e.nivel_actual}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Tiempo total</span>
-              <span class="stat-value">{formatTiempo(e.tiempo_total)}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Historial de intentos -->
-        <div class="intentos">
-          <h3>Historial de intentos</h3>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Memoreto</th>
-                <th>Nivel</th>
-                <th>Puntos</th>
-                <th>Tiempo</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {e.intentos.map(i => (
-                <tr>
-                  <td class="muted">{i.ultimo_juego}</td>
-                  <td>#{i.plantilla_id}</td>
-                  <td>{i.nivel}</td>
-                  <td class="points">{i.puntos}</td>
-                  <td>{formatTiempo(i.tiempo_s)}</td>
-                  <td>
-                    <span class={`badge ${i.exitoso ? 'badge-success' : 'badge-danger'}`}>
-                      {i.exitoso ? '✓ Completado' : '✗ Fallido'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    ))}
+  <!-- Lista de alumnos -->
+  <div id="students-list">
+    <p class="muted" style="text-align:center; padding:2rem;">Cargando alumnos...</p>
   </div>
 </BaseLayout>
 
-<style>
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
+<script>
+  const API   = 'http://localhost:5000';
+  const token = localStorage.getItem('token');
+  if (!token) window.location.href = '/';
+
+  function formatTiempo(segundos: number) {
+    if (!segundos) return '0m 0s';
+    const m = Math.floor(segundos / 60);
+    const s = segundos % 60;
+    return `${m}m ${s}s`;
   }
 
-  h1 { font-size: 1.6rem; margin-bottom: 0.3rem; }
-  .subtitle { color: var(--color-text-muted); font-size: 0.95rem; }
+  function renderEstudiantes(grupo: any, estudiantes: any[], intentosPor: Record<number, any[]>) {
+    document.getElementById('titulo-grupo')!.textContent  = `Alumnos — ${grupo.nombre}`;
+    document.getElementById('subtitulo')!.textContent     = `${estudiantes.length} estudiante${estudiantes.length !== 1 ? 's' : ''} registrado${estudiantes.length !== 1 ? 's' : ''}`;
+
+    const wrap = document.getElementById('students-list')!;
+
+    if (!estudiantes.length) {
+      wrap.innerHTML = '<p class="muted" style="text-align:center;padding:2rem;">No hay alumnos en este grupo aún.</p>';
+      return;
+    }
+
+    wrap.innerHTML = estudiantes.map(e => {
+      const intentosValidos = (intentosPor[e.estudiante_id] ?? []).filter((i: any) => i.dificultad != null);
+      const filasIntentos = intentosValidos.length
+        ? intentosValidos.map((i: any) => `
+            <tr>
+              <td class="muted">${i.ultima_vez ?? '—'}</td>
+              <td>#${i.memoreto_id ?? '—'}</td>
+              <td>${i.dificultad ?? '—'}</td>
+              <td class="points">${i.total_intentos ?? 0}</td>
+              <td>${i.veces_completado ?? 0}</td>
+              <td>${formatTiempo(i.mejor_tiempo ?? 0)}</td>
+              <td>
+                <span class="badge ${i.veces_completado > 0 ? 'badge-success' : 'badge-danger'}">
+                  ${i.veces_completado > 0 ? '✓ Completado' : '✗ Fallido'}
+                </span>
+              </td>
+            </tr>
+          `).join('')
+        : `<tr><td colspan="6" class="muted" style="text-align:center">Sin intentos registrados aún</td></tr>`;
+      return `
+        <div class="card student-card">
+          <div class="student-header">
+            <div class="student-avatar">${e.nombre?.[0] ?? '?'}${e.apellido?.[0] ?? ''}</div>
+            <div class="student-info">
+              <h2>${e.nombre} ${e.apellido}</h2>
+              <p class="muted">${e.correo ?? ''}</p>
+            </div>
+            <div class="student-stats">
+              <div class="stat">
+                <span class="stat-label">Puntos</span>
+                <span class="stat-value points">${e.puntos_totales ?? 0}</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Nivel</span>
+                <span class="stat-value">${e.nivel_actual ?? 0}</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Tiempo total</span>
+                <span class="stat-value">${formatTiempo(e.tiempo_total)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="intentos">
+            <h3>Historial de intentos</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Última vez</th>
+                  <th>Memoreto ID</th>
+                  <th>Dificultad</th>
+                  <th>Intentos</th>
+                  <th>Completados</th>
+                  <th>Mejor tiempo</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>${filasIntentos}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function cargarGrupo(grupo_id: number) {
+    document.getElementById('students-list')!.innerHTML =
+      '<p class="muted" style="text-align:center;padding:2rem;">Cargando alumnos...</p>';
+
+    // Detalle del grupo y sus estudiantes en paralelo
+    const [resGrupo, resEstudiantes] = await Promise.all([
+      fetch(`${API}/grupos/${grupo_id}`, { headers: { Authorization: `Bearer ${token}` } }),
+      fetch(`${API}/grupos/${grupo_id}/estudiantes`, { headers: { Authorization: `Bearer ${token}` } }),
+    ]);
+
+    const grupo       = await resGrupo.json();
+    const estudiantes = await resEstudiantes.json();
+
+    // Cargar intentos de cada estudiante en paralelo
+    const intentosResultados = await Promise.all(
+      estudiantes.map((e: any) =>
+        fetch(`${API}/intentos/estudiante/${e.estudiante_id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).then(r => r.json()).catch(() => [])
+      )
+    );
+
+    // Mapear intentos por estudiante_id
+    const intentosPor: Record<number, any[]> = {};
+    estudiantes.forEach((e: any, i: number) => {
+      intentosPor[e.estudiante_id] = intentosResultados[i];
+    });
+
+    renderEstudiantes(grupo, estudiantes, intentosPor);
+  }
+
+  // Cargar grupos en el select
+  const resGrupos = await fetch(`${API}/grupos`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const grupos = await resGrupos.json();
+  const select  = document.getElementById('grupo-select') as HTMLSelectElement;
+
+  if (!grupos.length) {
+    select.innerHTML = '<option value="">Sin grupos</option>';
+    document.getElementById('students-list')!.innerHTML =
+      '<p class="muted" style="text-align:center;padding:2rem;">No tienes grupos aún. <a href="/assign">Crea tu primer grupo</a></p>';
+  } else {
+    // Revisar si viene ?grupo= en la URL
+    const params     = new URLSearchParams(window.location.search);
+    const grupoParam = params.get('grupo');
+    const grupoInicial = grupoParam
+      ? grupos.find((g: any) => String(g.grupo_id) === grupoParam) ?? grupos[0]
+      : grupos[0];
+
+    select.innerHTML = grupos.map((g: any) =>
+      `<option value="${g.grupo_id}" ${g.grupo_id === grupoInicial.grupo_id ? 'selected' : ''}>${g.nombre}</option>`
+    ).join('');
+
+    cargarGrupo(grupoInicial.grupo_id);
+
+    select.addEventListener('change', (e) => {
+      const id = Number((e.target as HTMLSelectElement).value);
+      window.history.pushState({}, '', `/students?grupo=${id}`);
+      cargarGrupo(id);
+    });
+  }
+</script>
+
+<style>
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.5rem;
+  }
+
+  .filter-bar label {
+    font-weight: 600;
+    color: var(--color-text-body);
+    white-space: nowrap;
+  }
+
+  .filter-bar select { min-width: 260px; }
 
   .students-list {
     display: flex;
@@ -141,27 +200,27 @@ function formatTiempo(segundos: number) {
     gap: 1.5rem;
   }
 
-  /* Student card */
+  .student-card { padding: 1.5rem; }
+
   .student-header {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1.2rem;
     margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--color-border);
+    flex-wrap: wrap;
   }
 
   .student-avatar {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background-color: var(--color-primary);
+    width: 48px;
+    height: 48px;
+    background-color: #515A82;
     color: white;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1rem;
     flex-shrink: 0;
   }
 
@@ -170,7 +229,7 @@ function formatTiempo(segundos: number) {
 
   .student-stats {
     display: flex;
-    gap: 2rem;
+    gap: 1.5rem;
   }
 
   .stat {
@@ -181,81 +240,33 @@ function formatTiempo(segundos: number) {
   }
 
   .stat-label {
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   .stat-value {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    color: var(--color-text);
+    color: var(--color-text-body);
   }
 
-  /* Intentos */
   .intentos h3 {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--color-text-muted);
     margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
-  .table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.88rem;
-  }
-
-  .table th {
-    text-align: left;
-    padding: 0.5rem 0.75rem;
-    color: var(--color-text-muted);
-    border-bottom: 1px solid var(--color-border);
-    font-weight: 600;
-  }
-
-  .table td {
-    padding: 0.55rem 0.75rem;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .table tr:last-child td { border-bottom: none; }
-
-  .muted { color: var(--color-text-muted); }
-  .points { color: var(--color-success); font-weight: 700; }
-
-  /* Badges */
   .badge {
     display: inline-block;
-    padding: 0.2rem 0.6rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
+    color: white;
   }
 
-  .badge-success {
-    background-color: #d1fae5;
-    color: var(--color-success);
-  }
-
-  .badge-danger {
-    background-color: #fee2e2;
-    color: var(--color-danger);
-  }
-
-  .filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding: 1rem 1.5rem;
-}
-
-.filter-bar label {
-  font-weight: 600;
-  color: var(--color-text-body);
-  white-space: nowrap;
-}
-
-.filter-bar select {
-  max-width: 300px;
-}
 </style>

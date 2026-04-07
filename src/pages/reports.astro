@@ -10,117 +10,318 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </div>
     <div class="filtros">
       <select id="filtro-grupo">
-        <option value="1">Grupo A — Matemáticas 101</option>
-        <option value="2">Grupo B — Matemáticas 102</option>
+        <option value="">Cargando grupos...</option>
       </select>
     </div>
   </div>
 
-  <div class="charts-grid">
-    <!-- Puntuación por alumno -->
-    <div class="card">
-      <h2>Puntuación por alumno</h2>
-      <div id="chart-puntos"></div>
+  <div id="sin-datos" style="display:none" class="card">
+    <p class="muted" style="text-align:center; padding: 2rem;">No hay datos suficientes en este grupo aún.</p>
+  </div>
+
+  <div id="charts-wrap">
+    <!-- Fila 1: Las 2 gráficas nuevas complejas -->
+    <div class="charts-row-2 section-label">
+      <p class="section-title">Análisis por dificultad</p>
+      <div class="card">
+        <h2>Memoretos completados por dificultad</h2>
+        <p class="chart-desc">Cantidad de memoretos que los estudiantes del grupo han completado exitosamente, agrupados por nivel de dificultad.</p>
+        <div id="chart-completados-dificultad"></div>
+      </div>
+      <div class="card">
+        <h2>Distribución de tiempos por dificultad</h2>
+        <p class="chart-desc">Distribución estadística del tiempo de juego según la dificultad. La caja muestra la mediana y el rango intercuartil; los extremos muestran valores atípicos.</p>
+        <div id="chart-boxplot-tiempo"></div>
+      </div>
     </div>
 
-    <!-- Nivel alcanzado por alumno -->
-    <div class="card">
-      <h2>Nivel alcanzado por alumno</h2>
-      <div id="chart-niveles"></div>
+    <!-- Fila 2: Scatter y progreso -->
+    <div class="charts-row-2">
+      <div class="card">
+        <h2>Tiempo vs Puntos por alumno</h2>
+        <p class="chart-desc">Relación entre el tiempo total jugado y los puntos acumulados. Permite identificar alumnos eficientes (altos puntos en poco tiempo) vs alumnos que necesitan más tiempo.</p>
+        <div id="chart-scatter"></div>
+      </div>
+      <div class="card">
+        <h2>Progreso de puntaje en el tiempo</h2>
+        <p class="chart-desc">Evolución del puntaje acumulado de cada alumno a lo largo del tiempo. Cada línea representa un estudiante — pendientes más pronunciadas indican aprendizaje más rápido.</p>
+        <div id="chart-progreso"></div>
+      </div>
     </div>
 
-    <!-- Intentos por alumno -->
-    <div class="card">
-      <h2>Total de intentos por alumno</h2>
-      <div id="chart-intentos"></div>
-    </div>
-
-    <!-- Distribución de dificultad -->
-    <div class="card">
-      <h2>Memoretos resueltos por dificultad</h2>
-      <div id="chart-dificultad"></div>
+    <!-- Fila 3: Plantillas y ranking -->
+    <div class="charts-row-2">
+      <div class="card">
+        <h2>Estudiantes que completaron cada plantilla</h2>
+        <p class="chart-desc">Por cada memoreto (plantilla), muestra cuántos estudiantes lo han completado exitosamente. Identifica qué niveles son más accesibles y cuáles presentan mayor dificultad al grupo.</p>
+        <div id="chart-plantillas"></div>
+      </div>
+      <div class="card">
+        <h2>Puntuación por alumno</h2>
+        <p class="chart-desc">Puntos totales acumulados por cada estudiante del grupo, ordenados de mayor a menor.</p>
+        <div id="chart-puntos"></div>
+      </div>
     </div>
   </div>
 </BaseLayout>
 
 <script>
-  // Mock data — estructura idéntica a la API real
-  const estudiantes = [
-    { nombre: "Ana García",      puntos: 850, nivel: 5, intentos: 3, facil: 2, intermedio: 1, dificil: 0 },
-    { nombre: "Luis Martínez",   puntos: 720, nivel: 4, intentos: 3, facil: 1, intermedio: 1, dificil: 1 },
-    { nombre: "Sofía López",     puntos: 610, nivel: 3, intentos: 2, facil: 2, intermedio: 0, dificil: 0 },
-    { nombre: "Carlos Hdz.",     puntos: 540, nivel: 3, intentos: 4, facil: 1, intermedio: 2, dificil: 1 },
-    { nombre: "Valeria Ramírez", puntos: 490, nivel: 2, intentos: 2, facil: 2, intermedio: 0, dificil: 0 },
-  ];
+  const API   = 'http://localhost:5000';
+  const token = localStorage.getItem('token');
+  if (!token) window.location.href = '/';
 
-  const nombres   = estudiantes.map(e => e.nombre);
-  const colores   = ['#515A82', '#748FBA', '#4F8C72', '#8C7A30', '#9AA0C8'];
+  const Plotly = (window as any).Plotly;
 
-  const layout = (yTitle: string) => ({
+  const baseLayout = {
     paper_bgcolor: 'rgba(0,0,0,0)',
     plot_bgcolor:  'rgba(0,0,0,0)',
-    font: { family: 'Segoe UI, system-ui, sans-serif', color: '#353D60' },
-    margin: { t: 10, r: 10, b: 80, l: 50 },
-    xaxis: { tickfont: { size: 11 }, tickangle: -20 },
-    yaxis: { title: yTitle, gridcolor: '#E2E6F0' },
-    showlegend: false,
-  });
+    font: { family: 'Segoe UI, system-ui, sans-serif', color: '#353D60', size: 12 },
+    margin: { t: 20, r: 20, b: 80, l: 60 },
+    xaxis: { gridcolor: '#E2E6F0', tickfont: { size: 11 } },
+    yaxis: { gridcolor: '#E2E6F0' },
+  };
 
   const config = { responsive: true, displayModeBar: false };
 
-  // 1 — Puntuación por alumno
-  (window as any).Plotly.newPlot('chart-puntos', [{
-    type: 'bar',
-    x: nombres,
-    y: estudiantes.map(e => e.puntos),
-    marker: { color: colores },
-    text: estudiantes.map(e => String(e.puntos)),
-    textposition: 'outside',
-  }], layout('Puntos'), config);
+  const COLORES = {
+    Facil:      '#4F8C72',
+    Intermedio: '#8C7A30',
+    Dificil:    '#8C3030',
+    alumnos:    ['#515A82','#748FBA','#4F8C72','#8C7A30','#9AA0C8','#8C3030','#353D60','#B8C4E0'],
+  };
 
-  // 2 — Nivel por alumno
-  (window as any).Plotly.newPlot('chart-niveles', [{
-    type: 'bar',
-    x: nombres,
-    y: estudiantes.map(e => e.nivel),
-    marker: { color: colores },
-    text: estudiantes.map(e => String(e.nivel)),
-    textposition: 'outside',
-  }], { ...layout('Nivel'), yaxis: { ...layout('Nivel').yaxis, dtick: 1, range: [0, 7] } }, config);
+  async function cargarReporte(grupo_id: number) {
+    document.getElementById('sin-datos')!.style.display   = 'none';
+    document.getElementById('charts-wrap')!.style.display = 'block';
 
-  // 3 — Intentos por alumno
-  (window as any).Plotly.newPlot('chart-intentos', [{
-    type: 'bar',
-    x: nombres,
-    y: estudiantes.map(e => e.intentos),
-    marker: { color: '#748FBA' },
-    text: estudiantes.map(e => String(e.intentos)),
-    textposition: 'outside',
-  }], layout('Intentos'), config);
+    // Cargar estudiantes e intentos en paralelo
+    const [resEst, resInt] = await Promise.all([
+      fetch(`${API}/grupos/${grupo_id}/estudiantes`, { headers: { Authorization: `Bearer ${token}` } }),
+      fetch(`${API}/grupos/${grupo_id}/intentos`,    { headers: { Authorization: `Bearer ${token}` } }),
+    ]);
 
-  // 4 — Dificultad (stacked bar)
-  (window as any).Plotly.newPlot('chart-dificultad', [
-    {
-      type: 'bar', name: 'Fácil',
-      x: nombres, y: estudiantes.map(e => e.facil),
-      marker: { color: '#4F8C72' },
-    },
-    {
-      type: 'bar', name: 'Intermedio',
-      x: nombres, y: estudiantes.map(e => e.intermedio),
-      marker: { color: '#8C7A30' },
-    },
-    {
-      type: 'bar', name: 'Difícil',
-      x: nombres, y: estudiantes.map(e => e.dificil),
-      marker: { color: '#8C3030' },
-    },
-  ], {
-    ...layout('Memoretos'),
-    barmode: 'stack',
-    showlegend: true,
-    legend: { orientation: 'h', y: -0.3 },
-  }, config);
+    const estudiantes: any[] = await resEst.json();
+    const intentos:    any[] = await resInt.json();
+
+    if (!estudiantes.length && !intentos.length) {
+      document.getElementById('sin-datos')!.style.display   = 'block';
+      document.getElementById('charts-wrap')!.style.display = 'none';
+      return;
+    }
+
+    renderCompletadosDificultad(intentos);
+    renderBoxplotTiempo(intentos);
+    renderScatter(estudiantes);
+    renderProgreso(intentos, estudiantes);
+    renderPlantillas(intentos);
+    renderPuntos(estudiantes);
+  }
+
+  // ── 1. Barras agrupadas: completados por dificultad ───────────────────────
+  function renderCompletadosDificultad(intentos: any[]) {
+    const dificultades = ['Facil', 'Intermedio', 'Dificil'];
+    const completados  = dificultades.map(d =>
+      intentos.filter((i: any) => i.dificultad === d && i.exitoso === 1).length
+    );
+    const fallidos = dificultades.map(d =>
+      intentos.filter((i: any) => i.dificultad === d && i.exitoso === 0).length
+    );
+
+    Plotly.newPlot('chart-completados-dificultad', [
+      {
+        type: 'bar', name: 'Completados',
+        x: dificultades, y: completados,
+        marker: { color: [COLORES.Facil, COLORES.Intermedio, COLORES.Dificil] },
+        text: completados.map(String), textposition: 'outside',
+      },
+      {
+        type: 'bar', name: 'Fallidos',
+        x: dificultades, y: fallidos,
+        marker: { color: ['rgba(79,140,114,0.3)', 'rgba(140,122,48,0.3)', 'rgba(140,48,48,0.3)'] },
+        text: fallidos.map(String), textposition: 'outside',
+      }
+    ], {
+      ...baseLayout,
+      barmode: 'group',
+      showlegend: true,
+      legend: { orientation: 'h', y: -0.25 },
+      yaxis: { ...baseLayout.yaxis, title: 'Intentos' },
+    }, config);
+  }
+
+  // ── 2. Boxplot: distribución de tiempos por dificultad ────────────────────
+  function renderBoxplotTiempo(intentos: any[]) {
+    const dificultades = ['Facil', 'Intermedio', 'Dificil'];
+
+    const trazas = dificultades.map(d => ({
+      type: 'box',
+      name: d,
+      y: intentos.filter((i: any) => i.dificultad === d).map((i: any) => i.tiempo_s),
+      marker:  { color: (COLORES as any)[d] },
+      boxmean: 'sd', // muestra la media y desviación estándar
+      boxpoints: 'outliers',
+    }));
+
+    Plotly.newPlot('chart-boxplot-tiempo', trazas, {
+      ...baseLayout,
+      showlegend: false,
+      yaxis: { ...baseLayout.yaxis, title: 'Tiempo (segundos)' },
+    }, config);
+  }
+
+  // ── 3. Scatter: tiempo total vs puntos por alumno ─────────────────────────
+  function renderScatter(estudiantes: any[]) {
+    const colores = estudiantes.map((_: any, i: number) => COLORES.alumnos[i % COLORES.alumnos.length]);
+
+    Plotly.newPlot('chart-scatter', [{
+      type: 'scatter',
+      mode: 'markers+text',
+      x: estudiantes.map((e: any) => e.tiempo_total ?? 0),
+      y: estudiantes.map((e: any) => e.puntos_totales ?? 0),
+      text: estudiantes.map((e: any) => `${e.nombre} ${e.apellido[0]}.`),
+      textposition: 'top center',
+      textfont: { size: 9 },
+      marker: {
+        size: 12,
+        color: colores,
+        line: { width: 1, color: 'white' }
+      },
+      hovertemplate: '<b>%{text}</b><br>Tiempo: %{x}s<br>Puntos: %{y}<extra></extra>',
+    }], {
+      ...baseLayout,
+      xaxis: { ...baseLayout.xaxis, title: 'Tiempo total (segundos)' },
+      yaxis: { ...baseLayout.yaxis, title: 'Puntos totales' },
+    }, config);
+  }
+
+  // ── 4. Línea de progreso en el tiempo ─────────────────────────────────────
+  function renderProgreso(intentos: any[], estudiantes: any[]) {
+    // Agrupar intentos por estudiante y ordenar por fecha
+    const porEstudiante: Record<number, any[]> = {};
+    for (const i of intentos) {
+      if (!porEstudiante[i.estudiante_id]) porEstudiante[i.estudiante_id] = [];
+      porEstudiante[i.estudiante_id].push(i);
+    }
+
+    const trazas = estudiantes.slice(0, 8).map((e: any, idx: number) => {
+      const its = (porEstudiante[e.estudiante_id] ?? [])
+        .sort((a: any, b: any) => a.ultimo_juego.localeCompare(b.ultimo_juego));
+
+      // Acumular puntos en el tiempo
+      let acum = 0;
+      const fechas: string[] = [];
+      const puntos: number[] = [];
+      for (const i of its) {
+        acum += i.puntos ?? 0;
+        fechas.push(i.ultimo_juego);
+        puntos.push(acum);
+      }
+
+      return {
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: `${e.nombre} ${e.apellido[0]}.`,
+        x: fechas,
+        y: puntos,
+        line: { color: COLORES.alumnos[idx % COLORES.alumnos.length], width: 2 },
+        marker: { size: 6 },
+      };
+    });
+
+    Plotly.newPlot('chart-progreso', trazas, {
+      ...baseLayout,
+      showlegend: true,
+      legend: { orientation: 'h', y: -0.3, font: { size: 10 } },
+      xaxis: { ...baseLayout.xaxis, title: 'Fecha', type: 'date' },
+      yaxis: { ...baseLayout.yaxis, title: 'Puntos acumulados' },
+    }, config);
+  }
+
+  // ── 5. Plantillas: cuántos estudiantes completaron cada una ───────────────
+  function renderPlantillas(intentos: any[]) {
+    // Agrupar por plantilla_id, contar estudiantes únicos que lo completaron
+    const porPlantilla: Record<number, Set<number>> = {};
+    for (const i of intentos) {
+      if (i.exitoso !== 1) continue;
+      if (!porPlantilla[i.plantilla_id]) porPlantilla[i.plantilla_id] = new Set();
+      porPlantilla[i.plantilla_id].add(i.estudiante_id);
+    }
+
+    const plantillas = Object.keys(porPlantilla).map(Number).sort((a, b) => a - b);
+    const conteos    = plantillas.map(p => porPlantilla[p].size);
+
+    // Color por dificultad del primer intento de esa plantilla
+    const difPorPlantilla: Record<number, string> = {};
+    for (const i of intentos) {
+      if (!difPorPlantilla[i.plantilla_id]) difPorPlantilla[i.plantilla_id] = i.dificultad;
+    }
+    const coloresBarras = plantillas.map(p => (COLORES as any)[difPorPlantilla[p]] ?? '#748FBA');
+
+    Plotly.newPlot('chart-plantillas', [{
+      type: 'bar',
+      x: plantillas.map(p => `#${p}`),
+      y: conteos,
+      marker: { color: coloresBarras },
+      text: conteos.map(String),
+      textposition: 'outside',
+      hovertemplate: 'Plantilla #%{x}<br>Estudiantes: %{y}<extra></extra>',
+    }], {
+      ...baseLayout,
+      xaxis: { ...baseLayout.xaxis, title: 'Memoreto (plantilla_id)' },
+      yaxis: { ...baseLayout.yaxis, title: 'Estudiantes que completaron' },
+      coloraxis: { showscale: false },
+      annotations: [{
+        x: 1.02, y: 0.85, xref: 'paper', yref: 'paper',
+        text: '🟢 Fácil  🟡 Intermedio  🔴 Difícil',
+        showarrow: false, font: { size: 10 }, align: 'left',
+      }],
+    }, config);
+  }
+
+  // ── 6. Puntuación por alumno ───────────────────────────────────────────────
+  function renderPuntos(estudiantes: any[]) {
+    const ordenados = [...estudiantes].sort((a: any, b: any) => (b.puntos_totales ?? 0) - (a.puntos_totales ?? 0));
+    const nombres   = ordenados.map((e: any) => `${e.nombre} ${e.apellido[0]}.`);
+    const puntos    = ordenados.map((e: any) => e.puntos_totales ?? 0);
+    const colores   = ordenados.map((_: any, i: number) => COLORES.alumnos[i % COLORES.alumnos.length]);
+
+    Plotly.newPlot('chart-puntos', [{
+      type: 'bar',
+      x: nombres,
+      y: puntos,
+      marker: { color: colores },
+      text: puntos.map(String),
+      textposition: 'outside',
+    }], {
+      ...baseLayout,
+      margin: { ...baseLayout.margin, b: 100 },
+      xaxis: { ...baseLayout.xaxis, tickangle: -30 },
+      yaxis: { ...baseLayout.yaxis, title: 'Puntos' },
+    }, config);
+  }
+
+  // ── Cargar grupos en el select ─────────────────────────────────────────────
+  const resGrupos = await fetch(`${API}/grupos`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const grupos = await resGrupos.json();
+  const select  = document.getElementById('filtro-grupo') as HTMLSelectElement;
+
+  if (!grupos.length) {
+    select.innerHTML = '<option value="">Sin grupos</option>';
+    document.getElementById('charts-wrap')!.style.display = 'none';
+    document.getElementById('sin-datos')!.style.display   = 'block';
+  } else {
+    select.innerHTML = grupos.map((g: any) =>
+      `<option value="${g.grupo_id}">${g.nombre}</option>`
+    ).join('');
+
+    cargarReporte(grupos[0].grupo_id);
+
+    select.addEventListener('change', (e) => {
+      cargarReporte(Number((e.target as HTMLSelectElement).value));
+    });
+  }
 </script>
 
 <style>
@@ -133,22 +334,41 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   h1 { font-size: 1.6rem; margin-bottom: 0.3rem; }
   .subtitle { color: var(--color-text-muted); font-size: 0.95rem; }
-
   .filtros select { min-width: 260px; }
 
-  .charts-grid {
+  .charts-row-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-label { position: relative; }
+
+  .section-title {
+    grid-column: 1 / -1;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    margin-bottom: -0.5rem;
   }
 
   h2 {
     font-size: 1rem;
     color: var(--color-text-body);
+    margin-bottom: 0.4rem;
+  }
+
+  .chart-desc {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
     margin-bottom: 1rem;
+    line-height: 1.5;
   }
 
   @media (max-width: 768px) {
-    .charts-grid { grid-template-columns: 1fr; }
+    .charts-row-2 { grid-template-columns: 1fr; }
   }
 </style>

@@ -1,10 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-
-const grupos = [
-  { grupo_id: 1, nombre: "Grupo A — Matemáticas 101", descripcion: "Turno matutino", codigo: "MAT-1011" },
-  { grupo_id: 2, nombre: "Grupo B — Matemáticas 102", descripcion: "Turno vespertino", codigo: "MAT-1022" },
-];
 ---
 
 <BaseLayout pageTitle="Asignar" active="assign">
@@ -21,35 +16,9 @@ const grupos = [
     <div>
       <div class="card">
         <h2>Mis grupos</h2>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Código</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {grupos.map(g => (
-              <tr>
-                <td>
-                  <p class="grupo-nombre">{g.nombre}</p>
-                  <p class="muted">{g.descripcion}</p>
-                </td>
-                <td>
-                  <div class="codigo-badge">
-                    <span id={`codigo-${g.grupo_id}`}>{g.codigo}</span>
-                    <button class="btn-copy" onclick={`copiarCodigo('${g.codigo}')`} title="Copiar código">📋</button>
-                  </div>
-                </td>
-                <td class="acciones">
-                  <button class="btn btn-ghost btn-sm" onclick={`abrirEditarGrupo(${g.grupo_id}, '${g.nombre}', '${g.descripcion}')`}>✏️</button>
-                  <button class="btn btn-danger btn-sm" onclick={`eliminarGrupo(${g.grupo_id})`}>🗑️</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div id="tabla-grupos-wrap">
+          <p class="muted">Cargando grupos...</p>
+        </div>
       </div>
 
       <!-- Formulario nuevo grupo -->
@@ -65,15 +34,16 @@ const grupos = [
             <label for="grupo-desc">Descripción</label>
             <input type="text" id="grupo-desc" placeholder="Ej: Turno matutino" />
           </div>
+          <div id="form-error" class="error-msg" style="display:none"></div>
           <div class="form-actions">
-            <button type="button" id="btn-cancelar-grupo" class="btn btn-ghost" style="display:none" onclick="cancelarEdicion()">Cancelar</button>
-            <button type="submit" class="btn btn-primary">Guardar grupo</button>
+            <button type="button" id="btn-cancelar-grupo" class="btn btn-ghost" style="display:none">Cancelar</button>
+            <button type="submit" id="btn-guardar" class="btn btn-primary">Guardar grupo</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Columna derecha: Código para compartir + info -->
+    <!-- Columna derecha -->
     <div>
       <!-- Card de código nuevo (aparece al crear grupo) -->
       <div class="card codigo-card" id="card-codigo-nuevo" style="display:none">
@@ -84,7 +54,7 @@ const grupos = [
         <p class="codigo-instruccion">Comparte este código con tus alumnos para que puedan registrarse:</p>
         <div class="codigo-display">
           <span id="codigo-nuevo-valor"></span>
-          <button class="btn-copy-big" id="btn-copy-nuevo" onclick="copiarCodigoNuevo()">📋 Copiar</button>
+          <button class="btn-copy-big" id="btn-copy-nuevo">📋 Copiar</button>
         </div>
         <p class="codigo-hint">Los alumnos lo ingresan en <strong>memoreto.com/registro</strong></p>
       </div>
@@ -132,6 +102,10 @@ const grupos = [
 </BaseLayout>
 
 <script>
+  const API   = 'http://localhost:5000';
+  const token = localStorage.getItem('token');
+  if (!token) window.location.href = '/';
+
   function showToast(msg: string, tipo: string = 'success') {
     const t = document.getElementById('toast')!;
     t.textContent = msg;
@@ -145,64 +119,153 @@ const grupos = [
     showToast(`Código ${codigo} copiado ✓`);
   }
 
-  (window as any).copiarCodigo = copiarCodigo;
+  // Render tabla de grupos
+  function renderTabla(grupos: any[]) {
+    const wrap = document.getElementById('tabla-grupos-wrap')!;
+    if (!grupos.length) {
+      wrap.innerHTML = '<p class="muted">No tienes grupos aún.</p>';
+      return;
+    }
+    wrap.innerHTML = `
+      <table class="table">
+        <thead>
+          <tr><th>Nombre</th><th>Código</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+          ${grupos.map(g => `
+            <tr>
+              <td>
+                <p class="grupo-nombre">${g.nombre}</p>
+                <p class="muted">${g.descripcion ?? ''}</p>
+              </td>
+              <td>
+                <div class="codigo-badge">
+                  <span>${g.codigo}</span>
+                  <button class="btn-copy" onclick="copiarCodigo('${g.codigo}')" title="Copiar código">📋</button>
+                </div>
+              </td>
+              <td class="acciones">
+                <button class="btn btn-ghost btn-sm" onclick="abrirEditarGrupo(${g.grupo_id}, '${g.nombre}', '${g.descripcion ?? ''}')">✏️</button>
+                <button class="btn btn-danger btn-sm" onclick="eliminarGrupo(${g.grupo_id}, '${g.nombre}')">🗑️</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
 
-  (window as any).copiarCodigoNuevo = () => {
-    const codigo = document.getElementById('codigo-nuevo-valor')!.textContent!;
-    navigator.clipboard.writeText(codigo);
-    const btn = document.getElementById('btn-copy-nuevo')!;
-    btn.textContent = '✓ Copiado';
-    setTimeout(() => { btn.textContent = '📋 Copiar'; }, 2000);
-  };
+  // Cargar grupos
+  async function cargarGrupos() {
+    const res    = await fetch(`${API}/grupos`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const grupos = await res.json();
+    renderTabla(grupos);
+  }
 
   // Crear / editar grupo
-  document.getElementById('form-grupo')!.addEventListener('submit', (e) => {
+  document.getElementById('form-grupo')!.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const id     = (document.getElementById('grupo-id-edit') as HTMLInputElement).value;
-    const nombre = (document.getElementById('grupo-nombre') as HTMLInputElement).value;
+    const id      = (document.getElementById('grupo-id-edit') as HTMLInputElement).value;
+    const nombre  = (document.getElementById('grupo-nombre') as HTMLInputElement).value;
+    const desc    = (document.getElementById('grupo-desc') as HTMLInputElement).value;
+    const errorEl = document.getElementById('form-error')!;
+    const btn     = document.getElementById('btn-guardar') as HTMLButtonElement;
+    errorEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
 
-    if (id) {
-      // Edición
-      showToast(`Grupo "${nombre}" actualizado ✓`);
-      (window as any).cancelarEdicion();
-    } else {
-      // Creación — mock código (en real viene de la API)
-      const letras  = Math.random().toString(36).substring(2, 5).toUpperCase();
-      const numeros = Math.floor(1000 + Math.random() * 9000);
-      const codigo  = `${letras}-${numeros}`;
+    try {
+      if (id) {
+        // Editar grupo existente
+        const res  = await fetch(`${API}/grupos/${id}`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, descripcion: desc })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.mensaje ?? 'Error al actualizar');
+        showToast(`Grupo "${nombre}" actualizado ✓`);
+        cancelarEdicion();
+      } else {
+        // Crear grupo nuevo — el código lo genera el backend
+        const res  = await fetch(`${API}/grupos`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, descripcion: desc })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.mensaje ?? 'Error al crear');
 
-      document.getElementById('codigo-nuevo-valor')!.textContent = codigo;
-      document.getElementById('card-codigo-nuevo')!.style.display = 'block';
-      document.getElementById('card-codigo-nuevo')!.scrollIntoView({ behavior: 'smooth' });
-      showToast(`Grupo "${nombre}" creado ✓`);
+        // Mostrar el código que devuelve la API
+        document.getElementById('codigo-nuevo-valor')!.textContent = data.codigo;
+        document.getElementById('card-codigo-nuevo')!.style.display = 'block';
+        document.getElementById('card-codigo-nuevo')!.scrollIntoView({ behavior: 'smooth' });
+        showToast(`Grupo "${nombre}" creado ✓`);
+      }
+
+      await cargarGrupos();
+      (e.target as HTMLFormElement).reset();
+    } catch (err: any) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Guardar grupo';
     }
-
-    (e.target as HTMLFormElement).reset();
-    (window as any).cancelarEdicion();
   });
 
+  // Editar grupo
   (window as any).abrirEditarGrupo = (id: number, nombre: string, desc: string) => {
     (document.getElementById('grupo-id-edit') as HTMLInputElement).value = String(id);
-    (document.getElementById('grupo-nombre') as HTMLInputElement).value = nombre;
-    (document.getElementById('grupo-desc') as HTMLInputElement).value = desc;
+    (document.getElementById('grupo-nombre') as HTMLInputElement).value  = nombre;
+    (document.getElementById('grupo-desc') as HTMLInputElement).value    = desc;
     document.getElementById('form-grupo-titulo')!.textContent = 'Editar grupo';
     document.getElementById('btn-cancelar-grupo')!.style.display = 'inline-block';
     document.getElementById('card-codigo-nuevo')!.style.display = 'none';
   };
 
-  (window as any).cancelarEdicion = () => {
+  function cancelarEdicion() {
     (document.getElementById('grupo-id-edit') as HTMLInputElement).value = '';
-    (document.getElementById('grupo-nombre') as HTMLInputElement).value = '';
-    (document.getElementById('grupo-desc') as HTMLInputElement).value = '';
+    (document.getElementById('grupo-nombre') as HTMLInputElement).value  = '';
+    (document.getElementById('grupo-desc') as HTMLInputElement).value    = '';
     document.getElementById('form-grupo-titulo')!.textContent = 'Crear nuevo grupo';
     document.getElementById('btn-cancelar-grupo')!.style.display = 'none';
-  };
+    document.getElementById('form-error')!.style.display = 'none';
+  }
 
-  (window as any).eliminarGrupo = (id: number) => {
-    if (confirm('¿Eliminar este grupo? Los alumnos perderán acceso.')) {
-      showToast(`Grupo eliminado`, 'danger');
+  document.getElementById('btn-cancelar-grupo')!.addEventListener('click', cancelarEdicion);
+
+  // Eliminar grupo
+  (window as any).eliminarGrupo = async (id: number, nombre: string) => {
+    if (!confirm(`¿Eliminar el grupo "${nombre}"? Los alumnos perderán acceso.`)) return;
+    const res = await fetch(`${API}/grupos/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      showToast('Grupo eliminado', 'danger');
+      document.getElementById('card-codigo-nuevo')!.style.display = 'none';
+      await cargarGrupos();
+    } else {
+      showToast('Error al eliminar el grupo', 'danger');
     }
   };
+
+  // Copiar código de la card de nuevo grupo
+  document.getElementById('btn-copy-nuevo')!.addEventListener('click', () => {
+    const codigo = document.getElementById('codigo-nuevo-valor')!.textContent!;
+    navigator.clipboard.writeText(codigo);
+    const btn = document.getElementById('btn-copy-nuevo')!;
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => { btn.textContent = '📋 Copiar'; }, 2000);
+  });
+
+  (window as any).copiarCodigo = copiarCodigo;
+
+  // Cargar al iniciar
+  cargarGrupos();
 </script>
 
 <style>
